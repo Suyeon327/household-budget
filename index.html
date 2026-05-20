@@ -957,16 +957,6 @@
                 </button>
             </div>
 
-            <div class="ai-key-row" id="aiKeyRow">
-                <input type="password" id="aiApiKey" placeholder="Anthropic API 키 (sk-ant-...)" style="flex:1;" />
-                <input type="text" id="aiProxyUrl" placeholder="Cloudflare Worker URL (https://....workers.dev)" style="flex:1.5;" />
-                <button class="ai-key-save-btn" id="aiKeySaveBtn">저장</button>
-            </div>
-            <div class="ai-key-saved" id="aiKeySaved" style="display:none;">
-                <span>🔑 API 키 설정됨</span>
-                <button class="ai-key-reset-btn" id="aiKeyResetBtn">변경</button>
-            </div>
-
             <div class="ai-loading" id="aiLoading">
                 <div class="ai-spinner"></div>
                 <span>지출 패턴을 분석하는 중...</span>
@@ -1459,47 +1449,8 @@
         // ── AI 분석 ──────────────────────────────────────────
         let analysisCache = {};
         let currentAnalysisMonth = null;
-        let savedApiKey  = localStorage.getItem('anthropic_api_key') || '';
-        let savedProxyUrl = localStorage.getItem('anthropic_proxy_url') || '';
 
-        function initApiKeyUI() {
-            const keyRow   = document.getElementById('aiKeyRow');
-            const keySaved = document.getElementById('aiKeySaved');
-            if (savedApiKey && savedProxyUrl) {
-                keyRow.style.display = 'none';
-                keySaved.style.display = 'flex';
-            } else {
-                keyRow.style.display = 'flex';
-                keySaved.style.display = 'none';
-            }
-        }
-
-        document.getElementById('aiKeySaveBtn').onclick = function() {
-            const key   = document.getElementById('aiApiKey').value.trim();
-            const proxy = document.getElementById('aiProxyUrl').value.trim();
-            if (!key.startsWith('sk-')) {
-                alert('올바른 API 키를 입력해주세요. (sk-ant-... 형식)');
-                return;
-            }
-            if (!proxy.startsWith('https://')) {
-                alert('Cloudflare Worker URL을 입력해주세요. (https://....workers.dev)');
-                return;
-            }
-            savedApiKey   = key;
-            savedProxyUrl = proxy;
-            localStorage.setItem('anthropic_api_key', key);
-            localStorage.setItem('anthropic_proxy_url', proxy);
-            initApiKeyUI();
-        };
-
-        document.getElementById('aiKeyResetBtn').onclick = function() {
-            savedApiKey = ''; savedProxyUrl = '';
-            localStorage.removeItem('anthropic_api_key');
-            localStorage.removeItem('anthropic_proxy_url');
-            document.getElementById('aiApiKey').value   = '';
-            document.getElementById('aiProxyUrl').value = '';
-            initApiKeyUI();
-        };
+        const savedProxyUrl = 'https://flat-truth-df59.deariipt.workers.dev';
 
         async function fetchMonthTransactions(monthKey) {
             const transactionsRef = collection(db, 'months', monthKey, 'transactions');
@@ -1551,10 +1502,6 @@ ${summarize(prevTxns, prevKey)}
         }
 
         async function runAiAnalysis() {
-            if (!savedApiKey || !savedProxyUrl) {
-                alert('먼저 API 키와 Worker URL을 저장해주세요.');
-                return;
-            }
 
             const btn     = document.getElementById('aiAnalyzeBtn');
             const loading = document.getElementById('aiLoading');
@@ -1590,7 +1537,6 @@ ${summarize(prevTxns, prevKey)}
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': savedApiKey,
                     },
                     body: JSON.stringify({
                         model: 'claude-sonnet-4-20250514',
@@ -1641,7 +1587,6 @@ ${summarize(prevTxns, prevKey)}
         }
 
         window.addEventListener('DOMContentLoaded', function() {
-            initApiKeyUI();
             document.getElementById('aiAnalyzeBtn').onclick = runAiAnalysis;
         });
     </script>
